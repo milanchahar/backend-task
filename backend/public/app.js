@@ -1,4 +1,6 @@
-const API_BASE = '/api';
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+  ? '/api' 
+  : 'https://finance-tracker-backend-milan.onrender.com/api'; // Placeholder, user will need to update this or I can use a generic one if I know it.
 let AUTH_TOKEN = localStorage.getItem('token');
 let currentUser = null;
 let charts = {};
