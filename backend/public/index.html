@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Personal Finance Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <!-- Auth Screen -->
+  <div id="auth-screen" class="screen active">
+    <div class="auth-card">
+      <div class="logo">
+        <span class="logo-icon">💰</span>
+        <h1>FinanceTracker</h1>
+        <p>Your personal money manager</p>
+      </div>
+      <div class="tabs">
+        <button id="tab-login" class="tab active" onclick="switchTab('login')">Login</button>
+        <button id="tab-register" class="tab" onclick="switchTab('register')">Register</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="you@email.com" required/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="••••••••" required/>
+        </div>
+        <button type="submit" class="btn btn-primary">Sign In</button>
+        <p id="login-error" class="error-msg"></p>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="reg-name" placeholder="Your Name" maxlength="20" required/>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="reg-email" placeholder="you@email.com" required/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="reg-password" placeholder="••••••••" required/>
+        </div>
+        <button type="submit" class="btn btn-primary">Create Account</button>
+        <p id="reg-error" class="error-msg"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- App Screen -->
+  <div id="app-screen" class="screen hidden">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <span>💰</span> FinanceTracker
+      </div>
+      <nav class="sidebar-nav">
+        <a class="nav-item active" onclick="showSection('dashboard')" id="nav-dashboard">
+          <span>📊</span> Dashboard
+        </a>
+        <a class="nav-item" onclick="showSection('transactions')" id="nav-transactions">
+          <span>💳</span> Transactions
+        </a>
+        <a class="nav-item" onclick="showSection('categories')" id="nav-categories">
+          <span>🏷️</span> Categories
+        </a>
+        <a class="nav-item" onclick="showSection('budgets')" id="nav-budgets">
+          <span>🎯</span> Budgets
+        </a>
+        <a class="nav-item" onclick="showSection('reports')" id="nav-reports">
+          <span>📈</span> Reports
+        </a>
+        <a class="nav-item" onclick="showSection('ai')" id="nav-ai">
+          <span>🤖</span> AI Insights
+        </a>
+        <a class="nav-item" onclick="showSection('import')" id="nav-import">
+          <span>📂</span> Import CSV
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="btn btn-secondary" onclick="logout()">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Dashboard Section -->
+      <section id="section-dashboard" class="section active">
+        <div class="section-header">
+          <h2>Dashboard</h2>
+          <span class="subtitle">Your financial overview this month</span>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card income">
+            <div class="stat-label">Total Income</div>
+            <div class="stat-value" id="dash-income">$0.00</div>
+          </div>
+          <div class="stat-card expense">
+            <div class="stat-label">Total Expenses</div>
+            <div class="stat-value" id="dash-expense">$0.00</div>
+          </div>
+          <div class="stat-card savings">
+            <div class="stat-label">Net Savings</div>
+            <div class="stat-value" id="dash-savings">$0.00</div>
+          </div>
+        </div>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>Expense Breakdown</h3>
+            <canvas id="expense-pie-chart"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Recent Transactions</h3>
+            <div id="recent-transactions-list" class="recent-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Transactions Section -->
+      <section id="section-transactions" class="section hidden">
+        <div class="section-header">
+          <h2>Transactions</h2>
+          <button class="btn btn-primary" onclick="openModal('add-transaction-modal')">+ Add Transaction</button>
+        </div>
+        <div class="card">
+          <table class="data-table" id="transactions-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Currency</th>
+                <th>Amount</th>
+                <th>Receipt</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transactions-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Categories Section -->
+      <section id="section-categories" class="section hidden">
+        <div class="section-header">
+          <h2>Categories</h2>
+          <button class="btn btn-primary" onclick="openModal('add-category-modal')">+ Add Category</button>
+        </div>
+        <div class="card">
+          <table class="data-table">
+            <thead>
+              <tr><th>Name</th><th>Type</th><th>Actions</th></tr>
+            </thead>
+            <tbody id="categories-tbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Budgets Section -->
+      <section id="section-budgets" class="section hidden">
+        <div class="section-header">
+          <h2>Budgets</h2>
+          <button class="btn btn-primary" onclick="openModal('add-budget-modal')">+ Set Budget</button>
+        </div>
+        <div id="budgets-list" class="budgets-grid"></div>
+      </section>
+
+      <!-- Reports Section -->
+      <section id="section-reports" class="section hidden">
+        <div class="section-header">
+          <h2>Monthly Report</h2>
+          <div class="filter-row">
+            <select id="report-year" onchange="loadReports()">
+              <option value="2025">2025</option>
+              <option value="2026" selected>2026</option>
+            </select>
+          </div>
+        </div>
+        <div class="card">
+          <canvas id="monthly-bar-chart" height="100"></canvas>
+        </div>
+      </section>
+
+      <!-- AI Section -->
+      <section id="section-ai" class="section hidden">
+        <div class="section-header">
+          <h2>AI Insights</h2>
+          <span class="subtitle">Powered by OpenAI</span>
+        </div>
+        <div class="ai-actions">
+          <button class="btn btn-primary" onclick="getInsights()">💡 Get Financial Insights</button>
+          <button class="btn btn-secondary" onclick="detectAnomalies()">🔍 Detect Anomalies</button>
+        </div>
+        <div id="ai-output" class="ai-output hidden"></div>
+      </section>
+
+      <!-- Import CSV Section -->
+      <section id="section-import" class="section hidden">
+        <div class="section-header">
+          <h2>Import Bank Statement</h2>
+          <span class="subtitle">Upload a CSV file to auto-import transactions</span>
+        </div>
+        <div class="card import-card">
+          <div class="upload-area" id="csv-drop-area">
+            <span class="upload-icon">📂</span>
+            <p>Drag & drop your CSV file here, or click to browse</p>
+            <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="handleCSVUpload(event)"/>
+            <button class="btn btn-secondary" onclick="document.getElementById('csv-file-input').click()">Choose File</button>
+          </div>
+          <div id="import-result" class="import-result hidden"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modals -->
+  <!-- Add Transaction Modal -->
+  <div id="add-transaction-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="transaction-modal-title">Add Transaction</h3>
+        <button class="modal-close" onclick="closeModal('add-transaction-modal')">✕</button>
+      </div>
+      <form onsubmit="handleSaveTransaction(event)">
+        <input type="hidden" id="tx-edit-id"/>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="tx-description" required/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Amount</label>
+            <input type="number" id="tx-amount" step="0.01" required/>
+          </div>
+          <div class="form-group">
+            <label>Currency</label>
+            <select id="tx-currency">
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="INR">INR</option>
+              <option value="JPY">JPY</option>
+              <option value="CAD">CAD</option>
+              <option value="AUD">AUD</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" id="tx-date" required/>
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <select id="tx-category" required></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Receipt (optional)</label>
+          <input type="file" id="tx-receipt" accept="image/*,application/pdf"/>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('add-transaction-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Category Modal -->
+  <div id="add-category-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Category</h3>
+        <button class="modal-close" onclick="closeModal('add-category-modal')">✕</button>
+      </div>
+      <form onsubmit="handleSaveCategory(event)">
+        <div class="form-group">
+          <label>Name</label>
+          <input type="text" id="cat-name" maxlength="20" required/>
+        </div>
+        <div class="form-group">
+          <label>Type</label>
+          <select id="cat-type">
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('add-category-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Budget Modal -->
+  <div id="add-budget-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Set Budget</h3>
+        <button class="modal-close" onclick="closeModal('add-budget-modal')">✕</button>
+      </div>
+      <form onsubmit="handleSaveBudget(event)">
+        <div class="form-group">
+          <label>Category</label>
+          <select id="budget-category" required></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Month (1-12)</label>
+            <input type="number" id="budget-month" min="1" max="12" required/>
+          </div>
+          <div class="form-group">
+            <label>Limit Amount ($)</label>
+            <input type="number" id="budget-limit" step="0.01" min="0" required/>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('add-budget-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

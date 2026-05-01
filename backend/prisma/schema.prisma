@@ -36,8 +36,10 @@ model Category {
 model Transaction {
   id          Int     @id @default(autoincrement())
   amount      Decimal @db.Decimal(10, 2)
+  currency    String  @default("USD") @db.VarChar(3)
   date        DateTime
   description String  @db.VarChar(255)
+  receiptUrl  String? @db.VarChar(255)
   categoryId  Int
   category    Category @relation(fields: [categoryId], references: [id])
   userId      Int
